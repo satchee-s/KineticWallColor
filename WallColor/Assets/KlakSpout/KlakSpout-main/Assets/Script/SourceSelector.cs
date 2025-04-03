@@ -14,7 +14,7 @@ public class SourceSelector : MonoBehaviour
 
     // HACK: Assuming that the dropdown has more than
     // three child objects only while it's opened.
-    bool IsOpened => _dropdown.transform.childCount > 3;
+    bool IsOpened => _dropdown.transform.childCount > 1;
 
     void Start() => _receiver = GetComponent<SpoutReceiver>();
 
