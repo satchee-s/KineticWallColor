@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class TouchInput : MonoBehaviour
+public class MouseInput : MonoBehaviour
 {
     PlayerControls playerControls;
-    InputAction touchPress;
     InputAction mouseClick;
+    InputAction mousePosition;
+    InputAction touchPress;
+
+    [SerializeField] Color currColor;
 
     private void Awake()
     {
@@ -17,31 +20,39 @@ public class TouchInput : MonoBehaviour
 
         mouseClick = playerControls.Input.MouseLeftClick;
         mouseClick.Enable();
+
+        mousePosition = playerControls.Input.MousePosition;
+        mousePosition.Enable();
     }
 
     private void Update()
     {
-        if (touchPress.IsPressed())
+        if (mouseClick.IsPressed() || touchPress.IsPressed())
         {
-            DetectTouchedObjects();
+            DetectClickedObjects();
         }
     }
 
-    private void DetectTouchedObjects()
+    private void DetectClickedObjects()
     {
-        if (Touchscreen.current != null)
-        {
-            foreach (var touch in Touchscreen.current.touches)
-            {
-                if (touch.press.isPressed)
-                {
-                    Ray ray = Camera.main.ScreenPointToRay(touch.position.ReadValue());
-                    RaycastHit[] hits = Physics.RaycastAll(ray);
+        Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition.ReadValue<Vector2>());
+        RaycastHit[] mouseHits = Physics.RaycastAll(mouseRay);
 
-                    foreach (var hit in hits)
-                    {
-                        ChangeTouchedObjectColor(hit);
-                    }
+        foreach (var hit in mouseHits)
+        {
+            ChangeTouchedObjectColor(hit);
+        }
+
+        foreach (var touch in Touchscreen.current.touches)
+        {
+            if (touch.press.isPressed)
+            {
+                Ray _ray = Camera.main.ScreenPointToRay(touch.position.ReadValue());
+                RaycastHit[] _hits = Physics.RaycastAll(_ray);
+
+                foreach (var _hit in _hits)
+                {
+                    ChangeTouchedObjectColor(_hit);
                 }
             }
         }
@@ -49,13 +60,18 @@ public class TouchInput : MonoBehaviour
 
     void ChangeTouchedObjectColor(RaycastHit hit)
     {
-        hit.collider.gameObject.GetComponent<Panel>().SetEmissionColor(Color.white);
+        Panel panel = hit.collider.gameObject.GetComponent<Panel>();
+        if (panel != null)
+        {
+            panel.SetEmissionColor(currColor);
+        }
     }
 
     private void OnDisable()
     {
         playerControls.Disable();
-        touchPress.Disable();
         mouseClick.Disable();
+        mousePosition.Disable();
+        touchPress.Disable();
     }
 }
